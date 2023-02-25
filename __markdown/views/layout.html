@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css" id="highlight-light"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css" id="highlight-dark"/>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+
+  <link href="https://unpkg.com/@primer/css@^20.2.4/dist/primer.css" rel="stylesheet" />
+
+  <style>
+    #dark-mode {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      padding: 8px;
+      margin: 16px;
+      font-size: 1.5rem;
+      border-radius: 9999px;
+      border: none;
+      background: transparent;
+      transition: scale 0.5s;
+    }
+
+    #dark-mode:hover {
+      scale: 110%;
+    }
+
+    #content {
+      width: fit-content;
+    }
+
+    .markdown-body {
+      display: flex;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body class="markdown-body" style="margin: 8px;" data-color-mode="dark" data-dark-theme="dark">
+  
+    <div class="" id="content">
+      {{{ HTML }}}
+    </div>
+  <button id="dark-mode">☀</button>
+  <script>
+    const socket = new WebSocket(`wss://${location.hostname}`);
+    const content = document.getElementById('content');
+    
+    socket.addEventListener('message', (event) => {
+      let data = JSON.parse(event.data)
+      content.innerHTML = data.html;
+    });
+	</script>
+
+  <script>
+    var darkMode = localStorage.getItem("darkMode") || false
+    darkMode = (darkMode == "true")
+
+    const darkModeBtn = document.getElementById("dark-mode")
+
+    const highlightLight = document.getElementById("highlight-light")
+    const highlightDark = document.getElementById("highlight-dark")
+
+    function setDarkMode() {
+      highlightLight.disabled = true
+      highlightDark.disabled = true
+      if (darkMode) {
+        darkModeBtn.innerText = "☀️";
+        highlightDark.disabled = false
+        document.body.setAttribute("data-color-mode", "dark")
+        document.body.setAttribute("data-dark-theme", "dark")
+        
+      } else {
+        darkModeBtn.innerText = "🌙";
+        highlightLight.disabled = false
+        document.body.setAttribute("data-color-mode", "white")
+        document.body.setAttribute("data-dark-theme", "white")
+      }
+    }
+
+    darkModeBtn.addEventListener("click", function(e) {
+      darkMode = !darkMode
+      localStorage.setItem("darkMode", darkMode.toString())
+      setDarkMode()
+    })
+
+    setDarkMode()
+    
+  </script>
+
+  
+</body>
+</html>
