@@ -26,7 +26,7 @@ const server = http.createServer(app);
 
 // Get settings
 
-const { FLAVOUR } = require("./markdown.config.js")
+const { FLAVOUR, ENABLE_README } = require("./markdown.config.js")
 
 
 // Initialize Rendering
@@ -70,7 +70,9 @@ app.get("*", (req, res) => {
 
   let markdownFile = path.join(__dirname, pathName)
 
-
+  if (pathName.toLowerCase.includes("readme")) {
+    markdownFile = path.join(__dirname, "__markdown/404.md")
+  }
 
   if (!fs.existsSync(markdownFile)) {
     markdownFile += ".md"
@@ -97,7 +99,9 @@ server.on('upgrade', (request, socket, head) => {
 });
 
 const chokidar = require('chokidar');
-chokidar.watch(__dirname).on('all', async (event, filepath) => {
+chokidar.watch(".", {
+  cwd: path.join(__dirname)
+}).on('all', async (event, filepath) => {
   if (event === 'change') {
 
     if (filepath.endsWith(".md")) {
