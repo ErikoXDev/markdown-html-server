@@ -28,5 +28,5 @@ console.log("Hello World!")
 ```
 
 Embed an image:
-![Ray approves of this project]("/__markdown/")
+![The Favicon](/__markdown/favicon.svg)
 
