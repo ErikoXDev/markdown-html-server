@@ -10,6 +10,8 @@ This project is endorsed by RayhanADev
 "thats so cringe"
 "well just a heads up its not getting a promotion cause a similar template already exists"
 
+:clown: emoji
+
 */
 
 const showdown = require('showdown');
