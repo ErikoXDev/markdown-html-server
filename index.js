@@ -1,127 +1,108 @@
-const express = require('express');
-const path = require("path")
-const http = require('http');
+const express = require("express");
+const path = require("path");
+const http = require("http");
 
-/*
+const showdown = require("showdown");
+const showdownHighlight = require("showdown-highlight");
 
-This project is endorsed by RayhanADev
-
-"ew"
-"thats so cringe"
-"well just a heads up its not getting a promotion cause a similar template already exists"
-
-:clown: emoji
-
-*/
-
-const showdown = require('showdown');
-const showdownHighlight = require("showdown-highlight")
-
-const fs = require("fs")
+const fs = require("fs");
 
 const app = express();
 const server = http.createServer(app);
 
-
-
 // Get settings
 
-const { FLAVOUR, ENABLE_README } = require("./markdown.config.js")
-
+const { FLAVOUR, ENABLE_README } = require("./markdown.config.js");
 
 // Initialize Rendering
-const hbs = require('hbs');
-app.set('view engine', 'html');
-app.set('views', path.join(__dirname, "__markdown/views"))
-app.engine('html', hbs.__express);
+const hbs = require("hbs");
+app.set("view engine", "html");
+app.set("views", path.join(__dirname, "__markdown/views"));
+app.engine("html", hbs.__express);
 hbs.localsAsTemplateData(app);
 
 // __markdown public route
-app.use('/__markdown', express.static('__markdown/public'));
+app.use("/__markdown", express.static("__markdown/public"));
 
-var taskListEnablerExtension = function() {
-  return [{
-    type: 'output',
-    regex: /<input type="checkbox" disabled(="")?/g,
-    replace: '<input type="checkbox"'
-  }];
+var taskListEnablerExtension = function () {
+  return [
+    {
+      type: "output",
+      regex: /<input type="checkbox" disabled(="")?/g,
+      replace: '<input type="checkbox"',
+    },
+  ];
 };
 
-showdown.setFlavor(FLAVOUR)
+showdown.setFlavor(FLAVOUR);
 
 // make the converter
 var converter = new showdown.Converter({
   emoji: true,
   tasklists: true,
   simplifiedAutoLink: true,
-  extensions: [showdownHighlight({
-  }), taskListEnablerExtension]
+  extensions: [showdownHighlight({}), taskListEnablerExtension],
 });
-
 
 // rendering the markdown
 app.get("*", (req, res) => {
-  let pathName = req.originalUrl
-
+  let pathName = req.originalUrl;
 
   if (pathName == "/") {
-    pathName = "/index.md"
+    pathName = "/index.md";
   }
 
-  let markdownFile = path.join(__dirname, pathName)
+  let markdownFile = path.join(__dirname, pathName);
 
-  if (pathName.toLowerCase.includes("readme")) {
-    markdownFile = path.join(__dirname, "__markdown/404.md")
+  if (pathName.toLowerCase().includes("readme")) {
+    markdownFile = path.join(__dirname, "__markdown/404.md");
   }
 
   if (!fs.existsSync(markdownFile)) {
-    markdownFile += ".md"
+    markdownFile += ".md";
     if (!fs.existsSync(markdownFile)) {
-      markdownFile = path.join(__dirname, "__markdown/404.md")
+      markdownFile = path.join(__dirname, "__markdown/404.md");
     }
   }
 
-  let content = fs.readFileSync(markdownFile, "utf8")
+  let content = fs.readFileSync(markdownFile, "utf8");
 
-  let html = converter.makeHtml(content)
+  let html = converter.makeHtml(content);
 
-
-  res.render("layout", { HTML: html })
+  res.render("layout", { HTML: html });
 });
 
-const WebSocketServer = require('ws');
+const WebSocketServer = require("ws");
 const wss = new WebSocketServer.Server({ noServer: true });
 
-server.on('upgrade', (request, socket, head) => {
+server.on("upgrade", (request, socket, head) => {
   wss.handleUpgrade(request, socket, head, (ws) => {
-    wss.emit('connection', ws, request);
+    wss.emit("connection", ws, request);
   });
 });
 
-const chokidar = require('chokidar');
-chokidar.watch(".", {
-  cwd: path.join(__dirname)
-}).on('all', async (event, filepath) => {
-  if (event === 'change') {
+const chokidar = require("chokidar");
+chokidar
+  .watch(".", {
+    cwd: path.join(__dirname),
+  })
+  .on("all", async (event, filepath) => {
+    if (event === "change") {
+      if (filepath.endsWith(".md")) {
+        let markdown = fs.readFileSync(filepath).toString();
 
-    if (filepath.endsWith(".md")) {
+        let html = converter.makeHtml(markdown);
 
-      let markdown = fs.readFileSync(filepath).toString()
+        const msg = {
+          html: String(html),
+          path: filepath,
+        };
 
-      let html = converter.makeHtml(markdown)
-
-      const msg = {
-        html: String(html),
-        path: filepath
+        for (const client of wss.clients) client.send(JSON.stringify(msg));
       }
-
-      for (const client of wss.clients) client.send(JSON.stringify(msg));
-
     }
-
-  }
-});
+  });
 
 server.listen(3000, () => {
-  console.log('server started');
+  console.log("Server started at port 3000!");
 });
